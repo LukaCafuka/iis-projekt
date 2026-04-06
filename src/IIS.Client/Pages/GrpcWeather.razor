@@ -1,0 +1,70 @@
+@page "/weather"
+@attribute [Authorize(Roles = "Full")]
+@using Grpc.Core
+@using IIS.Contracts
+@inject Weather.WeatherClient WeatherClient
+@inject AuthTokenStore Tokens
+
+<PageTitle>gRPC weather</PageTitle>
+
+<h1>DHMZ weather (gRPC)</h1>
+<p>Data from <code>vrijeme.hr/hrvatska_n.xml</code> via gRPC service.</p>
+<div class="mb-2">
+    <input class="form-control" @bind="_city" placeholder="City contains…" />
+    <button class="btn btn-primary mt-2" @onclick="Load">Get temperatures</button>
+</div>
+@if (!string.IsNullOrEmpty(_err))
+{
+    <p class="text-danger">@_err</p>
+}
+@if (_entries.Count > 0)
+{
+    <table class="table table-sm">
+        <thead><tr><th>City</th><th>°C</th><th>Description</th></tr></thead>
+        <tbody>
+            @foreach (var e in _entries)
+            {
+                <tr>
+                    <td>@e.CityName</td>
+                    <td>@e.TemperatureC</td>
+                    <td>@e.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string _city = "Zagreb";
+    private List<CityTemperature> _entries = new();
+    private string? _err;
+
+    private async Task Load()
+    {
+        _err = null;
+        _entries.Clear();
+        try
+        {
+            var headers = new Metadata();
+            if (!string.IsNullOrWhiteSpace(Tokens.AccessToken))
+                headers.Add("Authorization", $"Bearer {Tokens.AccessToken}");
+
+            var reply = await WeatherClient.GetTemperaturesByCityAsync(new CityFilter { CityPart = _city }, headers);
+            if (!string.IsNullOrEmpty(reply.ErrorMessage))
+                _err = reply.ErrorMessage;
+            _entries.AddRange(reply.Entries);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.Unauthenticated)
+        {
+            _err = "Authentication required. Please sign in again.";
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.PermissionDenied)
+        {
+            _err = "Full role is required for this action.";
+        }
+        catch (Exception ex)
+        {
+            _err = ex.Message;
+        }
+    }
+}

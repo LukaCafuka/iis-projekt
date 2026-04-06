@@ -1,0 +1,57 @@
+@page "/graphql"
+@attribute [Authorize]
+@inject ApiClientWithAuthFactory ApiClientFactory
+
+<PageTitle>GraphQL</PageTitle>
+
+<h1>GraphQL</h1>
+<p>Endpoint <code>/graphql</code>. Readers: queries only. Full role: mutations below.</p>
+
+<div class="mb-3">
+    <label>Query</label>
+    <textarea class="form-control font-monospace" rows="6" @bind="_query"></textarea>
+    <button class="btn btn-primary mt-2" @onclick="RunQuery">Run query</button>
+</div>
+<pre class="small bg-light p-2">@_queryOut</pre>
+
+<AuthorizeView Roles="Full">
+    <div class="mt-4">
+        <label>Mutation (Full only)</label>
+        <textarea class="form-control font-monospace" rows="6" @bind="_mutation"></textarea>
+        <button class="btn btn-secondary mt-2" @onclick="RunMutation">Run mutation</button>
+    </div>
+    <pre class="small bg-light p-2 mt-2">@_mutationOut</pre>
+</AuthorizeView>
+
+@code {
+    private string _query = "query { tasks { id name completed } }";
+    private string _mutation = "mutation { createTask(input: { name: \"from gql\", description: \"demo\", completed: false }) { id name } }";
+    private string _queryOut = "";
+    private string _mutationOut = "";
+
+    private async Task RunQuery()
+    {
+        _queryOut = await PostGql(_query);
+    }
+
+    private async Task RunMutation()
+    {
+        _mutationOut = await PostGql(_mutation);
+    }
+
+    private async Task<string> PostGql(string query)
+    {
+        try
+        {
+            var client = ApiClientFactory.CreateClient();
+            var body = new { query };
+            var resp = await client.PostAsJsonAsync("graphql", body);
+            var payload = await resp.Content.ReadAsStringAsync();
+            return $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{payload}";
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+    }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "Single-object form",
+  "description": "Also valid: schema allows one task object without array wrapper",
+  "completed": false
+}

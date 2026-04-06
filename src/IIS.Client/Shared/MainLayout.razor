@@ -1,0 +1,42 @@
+@inherits LayoutComponentBase
+@inject AuthTokenStore Tokens
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+@inject BrowserTokenStorage BrowserStorage
+
+<PageTitle>IIS Interop</PageTitle>
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 auth-bar">
+            <AuthorizeView>
+                <Authorized>
+                    <span class="me-3">@context.User.Identity?.Name</span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="Logout">Log out</button>
+                </Authorized>
+                <NotAuthorized>
+                    <NavLink href="login">Login</NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        Tokens.Clear();
+        await BrowserStorage.ClearAsync().ConfigureAwait(false);
+        if (AuthState is JwtAuthStateProvider j)
+            j.NotifyChanged();
+        Nav.NavigateTo("/");
+    }
+}

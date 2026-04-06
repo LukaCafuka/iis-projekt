@@ -1,0 +1,12 @@
+[
+  {
+    "name": "JSON import sample 1",
+    "description": "Valid per Schemas/tasks-import.schema.json (array form)",
+    "completed": false
+  },
+  {
+    "name": "JSON import sample 2",
+    "description": "Second object in array",
+    "completed": true
+  }
+]

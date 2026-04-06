@@ -1,0 +1,76 @@
+@page "/import"
+@attribute [Authorize(Roles = "Full")]
+@inject ApiClientWithAuthFactory ApiClientFactory
+
+<PageTitle>XML / JSON import</PageTitle>
+
+<h1>Import tasks (validated)</h1>
+<p>Upload XML (<code>Tasks</code> root) or JSON (task object or array). Stored in the local database after schema validation.</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <h3>XML file</h3>
+        <InputFile OnChange="OnXml" />
+        @if (!string.IsNullOrEmpty(_xmlMsg))
+        {
+            <pre class="small mt-2">@_xmlMsg</pre>
+        }
+    </div>
+    <div class="col-md-6">
+        <h3>JSON file</h3>
+        <InputFile OnChange="OnJson" />
+        @if (!string.IsNullOrEmpty(_jsonMsg))
+        {
+            <pre class="small mt-2">@_jsonMsg</pre>
+        }
+    </div>
+</div>
+
+@code {
+    private string? _xmlMsg;
+    private string? _jsonMsg;
+
+    private async Task OnXml(InputFileChangeEventArgs e)
+    {
+        _xmlMsg = null;
+        try
+        {
+            var file = e.File;
+            await using var s = file.OpenReadStream(maxAllowedSize: 2_000_000);
+            using var ms = new MemoryStream();
+            await s.CopyToAsync(ms);
+            var client = ApiClientFactory.CreateClient();
+            using var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(ms.ToArray()), "file", file.Name);
+            var resp = await client.PostAsync("api/tasks/import/xml/upload", content);
+            var body = await resp.Content.ReadAsStringAsync();
+            _xmlMsg = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{body}";
+        }
+        catch (Exception ex)
+        {
+            _xmlMsg = ex.Message;
+        }
+    }
+
+    private async Task OnJson(InputFileChangeEventArgs e)
+    {
+        _jsonMsg = null;
+        try
+        {
+            var file = e.File;
+            await using var s = file.OpenReadStream(maxAllowedSize: 2_000_000);
+            using var ms = new MemoryStream();
+            await s.CopyToAsync(ms);
+            var client = ApiClientFactory.CreateClient();
+            using var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(ms.ToArray()), "file", file.Name);
+            var resp = await client.PostAsync("api/tasks/import/json/upload", content);
+            var body = await resp.Content.ReadAsStringAsync();
+            _jsonMsg = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{body}";
+        }
+        catch (Exception ex)
+        {
+            _jsonMsg = ex.Message;
+        }
+    }
+}

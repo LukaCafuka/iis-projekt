@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iis.local/schemas/tasks-import.schema.json",
+  "oneOf": [
+    { "$ref": "#/$defs/task" },
+    {
+      "type": "array",
+      "items": { "$ref": "#/$defs/task" }
+    }
+  ],
+  "$defs": {
+    "task": {
+      "type": "object",
+      "required": ["name", "description", "completed"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

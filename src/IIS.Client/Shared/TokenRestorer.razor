@@ -1,0 +1,45 @@
+@inject BrowserTokenStorage BrowserStorage
+@inject AuthTokenStore Tokens
+@inject AuthenticationStateProvider AuthState
+
+@if (!_ready)
+{
+    <p class="p-4 text-muted">Loading session…</p>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool _ready;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        try
+        {
+            var (access, refresh) = await BrowserStorage.LoadAsync().ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(access))
+            {
+                Tokens.AccessToken = access;
+                Tokens.RefreshToken = refresh;
+                if (AuthState is JwtAuthStateProvider j)
+                    j.NotifyChanged();
+            }
+        }
+        catch
+        {
+            // Storage unavailable during prerender, etc.
+        }
+        finally
+        {
+            _ready = true;
+            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        }
+    }
+}

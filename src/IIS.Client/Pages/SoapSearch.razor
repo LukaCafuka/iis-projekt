@@ -1,0 +1,59 @@
+@page "/soap"
+@attribute [Authorize(Roles = "Full")]
+@inject SoapSearchClient Soap
+
+<PageTitle>SOAP search</PageTitle>
+
+<h1>SOAP task search</h1>
+<p>Calls <code>/soap/TaskSearch.svc</code> — backend loads MockAPI, builds XML, validates XSD, filters with XPath.</p>
+
+<div class="mb-2">
+    <input class="form-control" @bind="_term" placeholder="Search term" />
+    <button class="btn btn-primary mt-2" @onclick="Search">Search</button>
+</div>
+@if (!string.IsNullOrEmpty(_fault))
+{
+    <pre class="text-danger small">@_fault</pre>
+}
+@if (_errors.Count > 0)
+{
+    <h4>Validation</h4>
+    <ul>
+        @foreach (var err in _errors)
+        {
+            <li class="text-warning">@err</li>
+        }
+    </ul>
+}
+@if (_rows.Count > 0)
+{
+    <table class="table table-sm">
+        <thead><tr><th>Id</th><th>Name</th><th>Description</th></tr></thead>
+        <tbody>
+            @foreach (var r in _rows)
+            {
+                <tr>
+                    <td>@r.Id</td>
+                    <td>@r.Name</td>
+                    <td>@r.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string _term = "";
+    private List<SoapTaskRow> _rows = new();
+    private List<string> _errors = new();
+    private string? _fault;
+
+    private async Task Search()
+    {
+        _fault = null;
+        var (items, errors, raw) = await Soap.SearchAsync(_term);
+        _rows = items;
+        _errors = errors;
+        _fault = raw;
+    }
+}

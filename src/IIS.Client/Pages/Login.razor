@@ -1,0 +1,66 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@inject IHttpClientFactory HttpFactory
+@inject AuthTokenStore Tokens
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+@inject IConfiguration Configuration
+@inject BrowserTokenStorage BrowserStorage
+
+<PageTitle>Login</PageTitle>
+
+<h1>Login</h1>
+
+<EditForm Model="_model" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <p>
+        <label>Email</label><br />
+        <InputText @bind-Value="_model.Email" class="form-control" />
+    </p>
+    <p>
+        <label>Password</label><br />
+        <InputText type="password" @bind-Value="_model.Password" class="form-control" />
+    </p>
+    <button class="btn btn-primary" type="submit">Sign in</button>
+</EditForm>
+@if (!string.IsNullOrEmpty(_error))
+{
+    <p class="text-danger mt-2">@_error</p>
+}
+
+@code {
+    private readonly LoginRequest _model = new();
+    private string? _error;
+
+    private async Task OnSubmit()
+    {
+        _error = null;
+        var baseUrl = Configuration["Api:BaseUrl"] ?? "http://localhost:5136";
+        try
+        {
+            var client = HttpFactory.CreateClient("Api");
+            var response = await client.PostAsJsonAsync("api/auth/login", _model);
+            if (!response.IsSuccessStatusCode)
+            {
+                _error = "Invalid credentials.";
+                return;
+            }
+            var token = await response.Content.ReadFromJsonAsync<TokenResponse>();
+            if (token == null)
+            {
+                _error = "Invalid response.";
+                return;
+            }
+            Tokens.AccessToken = token.AccessToken;
+            Tokens.RefreshToken = token.RefreshToken;
+            await BrowserStorage.SaveAsync(token.AccessToken, token.RefreshToken).ConfigureAwait(false);
+            if (AuthState is JwtAuthStateProvider j)
+                j.NotifyChanged();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            _error = ApiConnectionMessage.FromException(ex, baseUrl);
+        }
+    }
+}

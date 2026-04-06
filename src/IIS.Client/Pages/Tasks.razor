@@ -1,0 +1,194 @@
+@page "/tasks"
+@attribute [Authorize]
+@inject ApiClientWithAuthFactory ApiClientFactory
+
+<PageTitle>Tasks REST</PageTitle>
+
+<h1>Tasks (REST)</h1>
+<p class="text-muted">Provider: @_provider — uses JWT and respects server <code>TaskApi:Provider</code> (Public MockAPI vs Custom DB).</p>
+
+@if (_loading)
+{
+    <p>Loading…</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <p class="text-danger">@_error</p>
+}
+else
+{
+    <table class="table table-sm">
+        <thead>
+            <tr><th>Id</th><th>Name</th><th>Done</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var t in _items)
+            {
+                <tr>
+                    <td>@t.Id</td>
+                    <td>@t.Name</td>
+                    <td>@t.Completed</td>
+                    <td>
+                        <AuthorizeView Roles="Full">
+                            <button class="btn btn-sm btn-outline-secondary me-2" @onclick="() => StartEdit(t)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(t.Id)">Delete</button>
+                        </AuthorizeView>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <AuthorizeView Roles="Full">
+        <Authorized>
+            @if (!string.IsNullOrEmpty(_editId))
+            {
+                <h3>Edit task</h3>
+                <EditForm Model="_edit" OnValidSubmit="Update" Context="editCtx">
+                    <p><InputText class="form-control" @bind-Value="_edit.Name" placeholder="Name" /></p>
+                    <p><InputTextArea class="form-control" @bind-Value="_edit.Description" placeholder="Description" /></p>
+                    <p><InputCheckbox @bind-Value="_edit.Completed" /> Completed</p>
+                    <button class="btn btn-primary" type="submit">PUT</button>
+                    <button class="btn btn-outline-secondary ms-2" type="button" @onclick="CancelEdit">Cancel</button>
+                </EditForm>
+            }
+
+            <h3>Create task</h3>
+            <EditForm Model="_new" OnValidSubmit="Create" Context="editCtx">
+                <p><InputText class="form-control" @bind-Value="_new.Name" placeholder="Name" /></p>
+                <p><InputTextArea class="form-control" @bind-Value="_new.Description" placeholder="Description" /></p>
+                <p><InputCheckbox @bind-Value="_new.Completed" /> Completed</p>
+                <button class="btn btn-primary" type="submit">POST</button>
+            </EditForm>
+        </Authorized>
+    </AuthorizeView>
+}
+
+@code {
+    private readonly TaskDto _new = new() { Name = "", Description = "" };
+    private readonly TaskDto _edit = new() { Name = "", Description = "" };
+    private List<TaskDto> _items = new();
+    private bool _loading = true;
+    private string? _error;
+    private string _provider = "";
+    private string? _editId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConfig();
+        await LoadTasks();
+    }
+
+    private async Task LoadConfig()
+    {
+        try
+        {
+            var c = ApiClientFactory.CreateClient();
+            var r = await c.GetFromJsonAsync<ProviderDto>("api/config/task-api");
+            _provider = r?.Provider ?? "?";
+        }
+        catch { _provider = "?"; }
+    }
+
+    private async Task LoadTasks()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            var c = ApiClientFactory.CreateClient();
+            var resp = await c.GetAsync("api/tasks");
+            if (!resp.IsSuccessStatusCode)
+            {
+                var body = await resp.Content.ReadAsStringAsync();
+                _error = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{body}";
+                _items = new List<TaskDto>();
+                return;
+            }
+
+            var list = await resp.Content.ReadFromJsonAsync<List<TaskDto>>();
+            _items = list ?? new List<TaskDto>();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task Create()
+    {
+        var c = ApiClientFactory.CreateClient();
+        var response = await c.PostAsJsonAsync("api/tasks", _new);
+        if (response.IsSuccessStatusCode)
+        {
+            _new.Name = "";
+            _new.Description = "";
+            _new.Completed = false;
+            await LoadTasks();
+        }
+        else
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            _error = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}\r\n\r\n{body}";
+        }
+    }
+
+    private void StartEdit(TaskDto item)
+    {
+        _editId = item.Id;
+        _edit.Name = item.Name;
+        _edit.Description = item.Description;
+        _edit.Completed = item.Completed;
+        _edit.CreatedAt = item.CreatedAt;
+    }
+
+    private void CancelEdit()
+    {
+        _editId = null;
+        _edit.Name = "";
+        _edit.Description = "";
+        _edit.Completed = false;
+        _edit.CreatedAt = null;
+    }
+
+    private async Task Update()
+    {
+        if (string.IsNullOrWhiteSpace(_editId))
+            return;
+
+        var c = ApiClientFactory.CreateClient();
+        var response = await c.PutAsJsonAsync($"api/tasks/{Uri.EscapeDataString(_editId)}", _edit);
+        if (response.IsSuccessStatusCode)
+        {
+            CancelEdit();
+            await LoadTasks();
+            return;
+        }
+
+        var body = await response.Content.ReadAsStringAsync();
+        _error = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}\r\n\r\n{body}";
+    }
+
+    private async Task Delete(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        var c = ApiClientFactory.CreateClient();
+        var response = await c.DeleteAsync($"api/tasks/{Uri.EscapeDataString(id)}");
+        if (response.IsSuccessStatusCode)
+        {
+            if (string.Equals(_editId, id, StringComparison.Ordinal))
+                CancelEdit();
+            await LoadTasks();
+            return;
+        }
+
+        var body = await response.Content.ReadAsStringAsync();
+        _error = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}\r\n\r\n{body}";
+    }
+
+    private sealed class ProviderDto { public string? Provider { get; set; } }
+}

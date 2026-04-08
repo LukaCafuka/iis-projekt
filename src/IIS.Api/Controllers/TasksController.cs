@@ -30,6 +30,9 @@ public class TasksController(ITaskOperations tasks) : ControllerBase
     public async Task<ActionResult<TaskDto>> Create([FromBody] TaskDto dto, CancellationToken ct)
     {
         var created = await tasks.CreateAsync(dto, ct).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(created.Id))
+            return Ok(created);
+
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 

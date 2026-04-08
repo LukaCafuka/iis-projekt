@@ -88,7 +88,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<PublicTaskApiClient>();
 
 builder.Services.AddScoped<XsdXmlValidator>();
-builder.Services.AddScoped<JsonSchemaImportValidator>();
+builder.Services.AddSingleton<JsonSchemaImportValidator>();
 builder.Services.AddScoped<CustomTaskStore>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<ITaskOperations, TaskOperationsFacade>();

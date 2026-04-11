@@ -13,7 +13,7 @@
 }
 else if (!string.IsNullOrEmpty(_error))
 {
-    <p class="text-danger">@_error</p>
+    <pre class="small response-output text-danger">@_error</pre>
 }
 else
 {
@@ -101,7 +101,7 @@ else
             if (!resp.IsSuccessStatusCode)
             {
                 var body = await resp.Content.ReadAsStringAsync();
-                _error = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{body}";
+                _error = ResponseFormatter.FormatHttpResponse(resp, body);
                 _items = new List<TaskDto>();
                 return;
             }
@@ -111,7 +111,7 @@ else
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            _error = ResponseFormatter.FormatException(ex);
         }
         finally
         {
@@ -133,7 +133,7 @@ else
         else
         {
             var body = await response.Content.ReadAsStringAsync();
-            _error = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}\r\n\r\n{body}";
+            _error = ResponseFormatter.FormatHttpResponse(response, body);
         }
     }
 
@@ -170,7 +170,7 @@ else
         }
 
         var body = await response.Content.ReadAsStringAsync();
-        _error = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}\r\n\r\n{body}";
+        _error = ResponseFormatter.FormatHttpResponse(response, body);
     }
 
     private async Task Delete(string? id)
@@ -187,7 +187,7 @@ else
         }
 
         var body = await response.Content.ReadAsStringAsync();
-        _error = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}\r\n\r\n{body}";
+        _error = ResponseFormatter.FormatHttpResponse(response, body);
     }
 
     private sealed class ProviderDto { public string? Provider { get; set; } }

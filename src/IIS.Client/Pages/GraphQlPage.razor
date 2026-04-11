@@ -12,7 +12,7 @@
     <textarea class="form-control font-monospace" rows="6" @bind="_query"></textarea>
     <button class="btn btn-primary mt-2" @onclick="RunQuery">Run query</button>
 </div>
-<pre class="small bg-light p-2">@_queryOut</pre>
+<pre class="small response-output">@_queryOut</pre>
 
 <AuthorizeView Roles="Full">
     <div class="mt-4">
@@ -20,7 +20,7 @@
         <textarea class="form-control font-monospace" rows="6" @bind="_mutation"></textarea>
         <button class="btn btn-secondary mt-2" @onclick="RunMutation">Run mutation</button>
     </div>
-    <pre class="small bg-light p-2 mt-2">@_mutationOut</pre>
+    <pre class="small response-output mt-2">@_mutationOut</pre>
 </AuthorizeView>
 
 @code {
@@ -47,11 +47,11 @@
             var body = new { query };
             var resp = await client.PostAsJsonAsync("graphql", body);
             var payload = await resp.Content.ReadAsStringAsync();
-            return $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{payload}";
+            return ResponseFormatter.FormatHttpResponse(resp, payload);
         }
         catch (Exception ex)
         {
-            return ex.Message;
+            return ResponseFormatter.FormatException(ex);
         }
     }
 }

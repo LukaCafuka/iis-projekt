@@ -5,7 +5,7 @@
 <PageTitle>XML / JSON import</PageTitle>
 
 <h1>Import tasks (validated)</h1>
-<p>Upload XML (<code>Tasks</code> root) or JSON (task object or array). Stored in the local database after schema validation.</p>
+<p>Upload XML (<code>Tasks</code> root) or JSON (task object or array). Stored through the active task provider after schema validation.</p>
 
 <div class="row">
     <div class="col-md-6">
@@ -13,7 +13,7 @@
         <InputFile OnChange="OnXml" />
         @if (!string.IsNullOrEmpty(_xmlMsg))
         {
-            <pre class="small mt-2">@_xmlMsg</pre>
+            <pre class="small response-output mt-2">@_xmlMsg</pre>
         }
     </div>
     <div class="col-md-6">
@@ -21,7 +21,7 @@
         <InputFile OnChange="OnJson" />
         @if (!string.IsNullOrEmpty(_jsonMsg))
         {
-            <pre class="small mt-2">@_jsonMsg</pre>
+            <pre class="small response-output mt-2">@_jsonMsg</pre>
         }
     </div>
 </div>
@@ -44,11 +44,11 @@
             content.Add(new ByteArrayContent(ms.ToArray()), "file", file.Name);
             var resp = await client.PostAsync("api/tasks/import/xml/upload", content);
             var body = await resp.Content.ReadAsStringAsync();
-            _xmlMsg = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{body}";
+            _xmlMsg = ResponseFormatter.FormatHttpResponse(resp, body);
         }
         catch (Exception ex)
         {
-            _xmlMsg = ex.Message;
+            _xmlMsg = ResponseFormatter.FormatException(ex);
         }
     }
 
@@ -66,11 +66,11 @@
             content.Add(new ByteArrayContent(ms.ToArray()), "file", file.Name);
             var resp = await client.PostAsync("api/tasks/import/json/upload", content);
             var body = await resp.Content.ReadAsStringAsync();
-            _jsonMsg = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{body}";
+            _jsonMsg = ResponseFormatter.FormatHttpResponse(resp, body);
         }
         catch (Exception ex)
         {
-            _jsonMsg = ex.Message;
+            _jsonMsg = ResponseFormatter.FormatException(ex);
         }
     }
 }

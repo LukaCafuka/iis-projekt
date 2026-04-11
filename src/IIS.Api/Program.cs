@@ -35,9 +35,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(o =>
 
 builder.Services.AddIdentityCore<ApplicationUser>(o =>
     {
-        o.Password.RequireDigit = true;
-        o.Password.RequiredLength = 6;
+        o.Password.RequireDigit = false;
+        o.Password.RequiredLength = 1;
+        o.Password.RequireLowercase = false;
+        o.Password.RequireUppercase = false;
         o.Password.RequireNonAlphanumeric = false;
+        o.Password.RequiredUniqueChars = 1;
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()

@@ -14,7 +14,7 @@ namespace IIS.Api.Controllers;
 public class TaskImportController(
     XsdXmlValidator xsd,
     JsonSchemaImportValidator jsonSchema,
-    CustomTaskStore store) : ControllerBase
+    ITaskOperations tasks) : ControllerBase
 {
     [HttpPost("xml")]
     [Consumes("application/xml", "text/xml")]
@@ -38,14 +38,14 @@ public class TaskImportController(
 
         var created = new List<TaskDto>();
         foreach (var dto in dtos)
-            created.Add(await store.CreateAsync(dto, ct).ConfigureAwait(false));
+            created.Add(await tasks.CreateAsync(dto, ct).ConfigureAwait(false));
 
         return Ok(created);
     }
 
     [HttpPost("xml/upload")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> ImportXmlUpload([FromForm] IFormFile? file, CancellationToken ct)
+    public async Task<IActionResult> ImportXmlUpload(IFormFile? file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
             return BadRequest(new ValidationErrorResponse { Errors = new List<string> { "Empty file." } });
@@ -68,7 +68,7 @@ public class TaskImportController(
 
         var created = new List<TaskDto>();
         foreach (var dto in dtos)
-            created.Add(await store.CreateAsync(dto, ct).ConfigureAwait(false));
+            created.Add(await tasks.CreateAsync(dto, ct).ConfigureAwait(false));
 
         return Ok(created);
     }
@@ -95,14 +95,14 @@ public class TaskImportController(
 
         var created = new List<TaskDto>();
         foreach (var dto in dtos)
-            created.Add(await store.CreateAsync(dto, ct).ConfigureAwait(false));
+            created.Add(await tasks.CreateAsync(dto, ct).ConfigureAwait(false));
 
         return Ok(created);
     }
 
     [HttpPost("json/upload")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> ImportJsonUpload([FromForm] IFormFile? file, CancellationToken ct)
+    public async Task<IActionResult> ImportJsonUpload(IFormFile? file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
             return BadRequest(new ValidationErrorResponse { Errors = new List<string> { "Empty file." } });
@@ -125,7 +125,7 @@ public class TaskImportController(
 
         var created = new List<TaskDto>();
         foreach (var dto in dtos)
-            created.Add(await store.CreateAsync(dto, ct).ConfigureAwait(false));
+            created.Add(await tasks.CreateAsync(dto, ct).ConfigureAwait(false));
 
         return Ok(created);
     }

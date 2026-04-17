@@ -26,10 +26,29 @@ public class JsonSchemaImportValidator(IWebHostEnvironment env)
 
         using (doc)
         {
-            var result = _schema.Value.Evaluate(doc.RootElement, new EvaluationOptions
+            JsonSchema schema;
+            try
             {
-                OutputFormat = OutputFormat.List
-            });
+                schema = _schema.Value;
+            }
+            catch (Exception ex)
+            {
+                return new[] { $"Schema initialization failed: {ex.Message}" };
+            }
+
+            EvaluationResults result;
+            try
+            {
+                result = schema.Evaluate(doc.RootElement, new EvaluationOptions
+                {
+                    OutputFormat = OutputFormat.List
+                });
+            }
+            catch (Exception ex)
+            {
+                return new[] { $"Schema evaluation failed: {ex.Message}" };
+            }
+
             if (result.IsValid)
                 return Array.Empty<string>();
 

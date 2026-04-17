@@ -28,7 +28,7 @@ public class SoapSearchClient(ApiClientWithAuthFactory apiClientFactory)
         var response = await client.SendAsync(request, ct).ConfigureAwait(false);
         var xml = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
-            return ([], [], xml);
+        return ([], [], ResponseFormatter.FormatHttpResponse(response, xml));
 
         var doc = XDocument.Parse(xml);
         XNamespace ns = "http://iis.local/soap/tasks";

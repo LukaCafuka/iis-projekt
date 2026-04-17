@@ -16,7 +16,7 @@
   </Task>
   <Task>
     <id>4</id>
-    <name>contrasta</name>
+    <name>contrast</name>
     <description>sodalitas statua cicuta</description>
     <completed>false</completed>
     <createdAt>2026-03-20T13:05:26.019Z</createdAt>
@@ -289,7 +289,7 @@
   </Task>
   <Task>
     <id>46</id>
-    <name>reels</name>
+    <name>reel</name>
     <description>certus pauper culpa</description>
     <completed>true</completed>
     <createdAt>2026-03-20T23:59:41.621Z</createdAt>
@@ -307,44 +307,5 @@
     <description>demo</description>
     <completed>false</completed>
     <createdAt>2026-04-09T14:08:37.674Z</createdAt>
-  </Task>
-  <Task>
-    <id>49</id>
-    <name>synthesise</name>
-    <description>voluptatem acervus campana</description>
-    <completed>true</completed>
-    <createdAt>2026-04-16T21:01:55.224Z</createdAt>
-  </Task>
-  <Task>
-    <id>50</id>
-    <name>testify</name>
-    <description>caritas contabesco talus</description>
-    <completed>false</completed>
-    <createdAt>2026-04-17T14:02:35.567Z</createdAt>
-  </Task>
-  <Task>
-    <id>51</id>
-    <name>wallop</name>
-    <description>avarus cicuta talio</description>
-    <completed>true</completed>
-    <createdAt>2026-04-17T10:00:45.494Z</createdAt>
-  </Task>
-  <Task>
-    <id>52</id>
-    <name>test fell</name>
-    <description>test</description>
-    <completed>false</completed>
-  </Task>
-  <Task>
-    <id>53</id>
-    <name>kontrasta</name>
-    <description></description>
-    <completed>true</completed>
-  </Task>
-  <Task>
-    <id>54</id>
-    <name>from gql</name>
-    <description>demo</description>
-    <completed>false</completed>
   </Task>
 </Tasks>

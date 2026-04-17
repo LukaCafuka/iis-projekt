@@ -15,7 +15,7 @@
         <button class="btn btn-primary mt-2" @onclick="ValidateXml">Validate XML</button>
         @if (!string.IsNullOrEmpty(_xmlResult))
         {
-            <pre class="mt-3 small">@_xmlResult</pre>
+            <pre class="mt-3 small response-output">@_xmlResult</pre>
         }
     </div>
 
@@ -25,19 +25,33 @@
         <button class="btn btn-primary mt-2" @onclick="ValidateJson">Validate JSON</button>
         @if (!string.IsNullOrEmpty(_jsonResult))
         {
-            <pre class="mt-3 small">@_jsonResult</pre>
+            <pre class="mt-3 small response-output">@_jsonResult</pre>
         }
     </div>
 </div>
 
 @if (!string.IsNullOrEmpty(_generalError))
 {
-    <pre class="mt-3 small">@_generalError</pre>
+    <pre class="mt-3 small response-output text-danger">@_generalError</pre>
 }
 
 @code {
-    private string _xml = "<Tasks><Task><name>t</name><description>d</description><completed>false</completed></Task></Tasks>";
-    private string _json = "{\"name\":\"t\",\"description\":\"d\",\"completed\":false}";
+        private string _xml = """
+<Tasks>
+    <Task>
+        <name>Sample task</name>
+        <description>Sample description</description>
+        <completed>false</completed>
+    </Task>
+</Tasks>
+""";
+        private string _json = """
+{
+    "name": "Sample task",
+    "description": "Sample description",
+    "completed": false
+}
+""";
     private string? _xmlResult;
     private string? _jsonResult;
     private string? _generalError;
@@ -52,11 +66,11 @@
             using var content = new StringContent(_xml, System.Text.Encoding.UTF8, "application/xml");
             var resp = await client.PostAsync("api/validation/xml", content);
             var body = await resp.Content.ReadAsStringAsync();
-            _xmlResult = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{body}";
+            _xmlResult = ResponseFormatter.FormatHttpResponse(resp, body);
         }
         catch (Exception ex)
         {
-            _generalError = ex.ToString();
+            _generalError = ResponseFormatter.FormatException(ex);
         }
     }
 
@@ -70,11 +84,11 @@
             using var content = new StringContent(_json, System.Text.Encoding.UTF8, "application/json");
             var resp = await client.PostAsync("api/validation/json", content);
             var body = await resp.Content.ReadAsStringAsync();
-            _jsonResult = $"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}\r\n\r\n{body}";
+            _jsonResult = ResponseFormatter.FormatHttpResponse(resp, body);
         }
         catch (Exception ex)
         {
-            _generalError = ex.ToString();
+            _generalError = ResponseFormatter.FormatException(ex);
         }
     }
 }

@@ -16,16 +16,16 @@ public static class DbInitializer
                 await roleManager.CreateAsync(new IdentityRole(role)).ConfigureAwait(false);
         }
 
-        await EnsureUserAsync(userManager, "reader@iis.local", "Reader123!", "Reader").ConfigureAwait(false);
-        await EnsureUserAsync(userManager, "full@iis.local", "Full123!", "Full").ConfigureAwait(false);
+        await EnsureUserAsync(userManager, "reader", "Reader1", "Reader").ConfigureAwait(false);
+        await EnsureUserAsync(userManager, "full", "Full123", "Full").ConfigureAwait(false);
     }
 
-    private static async Task EnsureUserAsync(UserManager<ApplicationUser> users, string email, string password, string role)
+    private static async Task EnsureUserAsync(UserManager<ApplicationUser> users, string username, string password, string role)
     {
-        var existing = await users.FindByEmailAsync(email).ConfigureAwait(false);
+        var existing = await users.FindByNameAsync(username).ConfigureAwait(false);
         if (existing != null)
             return;
-        var user = new ApplicationUser { UserName = email, Email = email };
+        var user = new ApplicationUser { UserName = username };
         var result = await users.CreateAsync(user, password).ConfigureAwait(false);
         if (result.Succeeded)
             await users.AddToRoleAsync(user, role).ConfigureAwait(false);

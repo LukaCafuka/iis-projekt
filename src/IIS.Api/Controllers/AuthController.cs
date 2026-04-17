@@ -29,7 +29,7 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<TokenResponse>> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var user = new ApplicationUser { UserName = request.Email, Email = request.Email };
+        var user = new ApplicationUser { UserName = request.Username };
         var result = await _users.CreateAsync(user, request.Password).ConfigureAwait(false);
         if (!result.Succeeded)
             return BadRequest(string.Join("; ", result.Errors.Select(e => e.Description)));
@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<TokenResponse>> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        var user = await _users.FindByEmailAsync(request.Email).ConfigureAwait(false);
+        var user = await _users.FindByNameAsync(request.Username).ConfigureAwait(false);
         if (user == null)
             return Unauthorized();
         if (!await _users.CheckPasswordAsync(user, request.Password).ConfigureAwait(false))

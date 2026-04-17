@@ -10,9 +10,15 @@ public class PublicTaskApiClient
 {
     private readonly HttpClient _http;
     private readonly TaskApiOptions _options;
+
+    // mockapi.io uses camelCase for its native fields (id, name, description,
+    // completed, createdAt). Serialising with this policy means we both send
+    // and match the lower-case names only, so we don't pollute mockapi records
+    // with parallel PascalCase keys and don't accidentally pick up any stray
+    // "Id": null written by earlier requests.
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     public PublicTaskApiClient(HttpClient http, IOptions<TaskApiOptions> options)

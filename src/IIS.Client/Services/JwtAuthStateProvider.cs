@@ -21,10 +21,11 @@ public class JwtAuthStateProvider(AuthTokenStore store) : AuthenticationStatePro
             var claims = jwt.Claims.ToList();
             if (claims.All(c => c.Type != ClaimTypes.Name))
             {
-                var email = claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value
-                    ?? claims.FirstOrDefault(c => c.Type == "email")?.Value;
-                if (!string.IsNullOrEmpty(email))
-                    claims.Add(new Claim(ClaimTypes.Name, email));
+                var name = claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName)?.Value
+                    ?? claims.FirstOrDefault(c => c.Type == "unique_name")?.Value
+                    ?? claims.FirstOrDefault(c => c.Type == "name")?.Value;
+                if (!string.IsNullOrEmpty(name))
+                    claims.Add(new Claim(ClaimTypes.Name, name));
             }
 
             var identity = new ClaimsIdentity(claims, "jwt");

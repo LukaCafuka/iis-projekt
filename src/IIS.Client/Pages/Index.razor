@@ -1,15 +1,72 @@
 @page "/"
 @attribute [AllowAnonymous]
+@using System.IdentityModel.Tokens.Jwt
+@using IIS.Client.Services
+@inject AuthTokenStore Tokens
 
-<PageTitle>IIS Interop</PageTitle>
+<PageTitle>IIS demo</PageTitle>
 
-<h1>Interoperability demo</h1>
-<p class="lead">College project: REST (import + JWT CRUD), SOAP (MockAPI + XPath), XSD validation, gRPC (DHMZ weather), GraphQL, and a public/custom API switch.</p>
+<h1>IIS demo</h1>
 <AuthorizeView>
     <Authorized>
-        <p>Signed in as <strong>@context.User.Identity?.Name</strong>. Use the navigation menu for each integration.</p>
+        <p>Signed in as <strong>@context.User.Identity?.Name</strong></p>
+
+        <h2 class="h5 mt-4">Current JWT (access token)</h2>
+        <p class="text-muted small mb-1">
+            @if (_accessExpiresAt is { } exp)
+            {
+                <span> Expires <strong>@exp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</strong> (@FormatRemaining(exp)).</span>
+            }
+        </p>
+        <div class="mb-2">
+            <textarea class="form-control font-monospace small" rows="4" readonly>@(Tokens.AccessToken ?? "")</textarea>
+        </div>
+
+        <h2 class="h5 mt-4">Refresh token</h2>
+        <p class="text-muted small mb-1">new token <code>POST api/auth/refresh</code>.</p>
+        <div class="mb-2">
+            <textarea class="form-control font-monospace small" rows="2" readonly>@(Tokens.RefreshToken ?? "")</textarea>
+        </div>
     </Authorized>
     <NotAuthorized>
-        <p><a href="login">Log in</a> or <a href="register">register</a> (seed users: reader@iis.local / Reader123!, full@iis.local / Full123!).</p>
+        <p><a href="login">Log in</a> or <a href="register">register</a> (seed users: reader / Reader1, full / Full123).</p>
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+    private List<(string Type, string Value)> _claims = new();
+    private DateTimeOffset? _accessExpiresAt;
+
+    protected override void OnParametersSet()
+    {
+        _claims.Clear();
+        _accessExpiresAt = null;
+
+        if (string.IsNullOrEmpty(Tokens.AccessToken))
+            return;
+
+        try
+        {
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(Tokens.AccessToken);
+            _claims = jwt.Claims.Select(c => (c.Type, c.Value)).ToList();
+            if (jwt.ValidTo != default)
+                _accessExpiresAt = new DateTimeOffset(jwt.ValidTo, TimeSpan.Zero);
+        }
+        catch
+        {
+            _accessExpiresAt = null;
+        }
+    }
+
+    private static string FormatRemaining(DateTimeOffset exp)
+    {
+        var delta = exp - DateTimeOffset.UtcNow;
+        if (delta <= TimeSpan.Zero)
+            return "expired";
+        if (delta.TotalMinutes < 1)
+            return $"in {(int)delta.TotalSeconds}s";
+        if (delta.TotalHours < 1)
+            return $"in {(int)delta.TotalMinutes} min";
+        return $"in {delta.Hours}h {delta.Minutes}m";
+    }
+}

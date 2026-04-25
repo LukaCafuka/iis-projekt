@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 namespace IIS.Api.Soap;
 
 public class TaskSearchSoapService(
-    PublicTaskApiClient publicApi,
+    ITaskOperations taskOperations,
     XsdXmlValidator xsd,
     IWebHostEnvironment env,
     IHttpContextAccessor httpContextAccessor) : ITaskSearchSoap
@@ -24,11 +24,13 @@ public class TaskSearchSoapService(
             throw new UnauthorizedAccessException("Full role required.");
         }
 
-        var tasks = await publicApi.GetAllAsync().ConfigureAwait(false);
+        // Routes through the configured provider (Custom EF / Public MockAPI) per TaskApi:Provider.
+        var ct = httpContextAccessor.HttpContext?.RequestAborted ?? CancellationToken.None;
+        var tasks = await taskOperations.GetAllAsync(ct).ConfigureAwait(false);
         var xml = TaskXmlBuilder.BuildTasksDocument(tasks);
         var xmlPath = System.IO.Path.Combine(env.ContentRootPath, "Generated", "soap-tasks.xml");
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(xmlPath)!);
-        await File.WriteAllTextAsync(xmlPath, xml, Encoding.UTF8).ConfigureAwait(false);
+        await File.WriteAllTextAsync(xmlPath, xml, Encoding.UTF8, ct).ConfigureAwait(false);
 
         var validationErrors = xsd.ValidateFile(xmlPath).ToList();
         if (validationErrors.Count > 0)

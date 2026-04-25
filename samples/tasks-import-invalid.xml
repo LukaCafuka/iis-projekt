@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tasks>
+  <Task id="1">
+    <name>Sample task A</name>
+    <description>Valid per Schemas/tasks.xsd</description>
+    <completed>false</completed>
+  </Task>
+  <Task>
+    <name>Sample task B</name>
+    <description>Second row</description>
+    <completed>true</completed>
+  </Task>
+</Tasks>

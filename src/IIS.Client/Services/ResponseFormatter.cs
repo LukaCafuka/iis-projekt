@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -7,7 +8,9 @@ public static class ResponseFormatter
 {
     private static readonly JsonSerializerOptions IndentedJson = new()
     {
-        WriteIndented = true
+        WriteIndented = true,
+        // Display-only: keep characters like ', <, >, & readable instead of \uXXXX.
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     public static string FormatHttpResponse(HttpResponseMessage response, string body)

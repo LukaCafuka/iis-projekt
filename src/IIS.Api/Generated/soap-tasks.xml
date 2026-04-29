@@ -378,4 +378,25 @@
     <completed>false</completed>
     <createdAt>2026-04-29T17:58:57.796Z</createdAt>
   </Task>
+  <Task>
+    <id>60</id>
+    <name>from gql</name>
+    <description>demo</description>
+    <completed>false</completed>
+    <createdAt>2026-04-29T12:26:14.028Z</createdAt>
+  </Task>
+  <Task>
+    <id>61</id>
+    <name>JSON import sample 1</name>
+    <description>Valid per Schemas/tasks-import.schema.json (array form)</description>
+    <completed>false</completed>
+    <createdAt>2026-04-29T10:45:01.915Z</createdAt>
+  </Task>
+  <Task>
+    <id>62</id>
+    <name>JSON import sample 2</name>
+    <description>Second object in array</description>
+    <completed>true</completed>
+    <createdAt>2026-04-29T04:17:46.341Z</createdAt>
+  </Task>
 </Tasks>

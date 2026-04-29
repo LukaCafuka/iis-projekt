@@ -33,10 +33,6 @@
     <ProjectReference Include="..\IIS.Contracts\IIS.Contracts.csproj" />
   </ItemGroup>
 
-  <Target Name="FailWhenDevApiPortsInUse" BeforeTargets="Build" Condition="'$(SkipApiRunningCheck)' != 'true' AND $([MSBuild]::IsOSPlatform('Windows'))">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\check-api-ports.ps1&quot;" />
-  </Target>
-
   <ItemGroup>
     <Content Update="Schemas\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

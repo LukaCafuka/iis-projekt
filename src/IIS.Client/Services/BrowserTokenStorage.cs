@@ -8,7 +8,6 @@ public static class BrowserTokenStorageKeys
     public const string RefreshToken = "iis.refreshToken";
 }
 
-/// <summary> Persists JWTs in session storage so reloads keep the user signed in. </summary>
 public class BrowserTokenStorage(ProtectedSessionStorage session)
 {
     public async ValueTask SaveAsync(string? accessToken, string? refreshToken)

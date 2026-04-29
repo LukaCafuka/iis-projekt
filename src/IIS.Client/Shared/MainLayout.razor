@@ -3,6 +3,7 @@
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Nav
 @inject BrowserTokenStorage BrowserStorage
+@inject IHttpClientFactory HttpFactory
 
 <PageTitle>IIS Interop</PageTitle>
 
@@ -33,6 +34,16 @@
 @code {
     private async Task Logout()
     {
+        try
+        {
+            var client = HttpFactory.CreateClient("ApiNoAuth");
+            await client.PostAsync("api/auth/logout", null).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Best-effort server cookie clear
+        }
+
         Tokens.Clear();
         await BrowserStorage.ClearAsync().ConfigureAwait(false);
         if (AuthState is JwtAuthStateProvider j)

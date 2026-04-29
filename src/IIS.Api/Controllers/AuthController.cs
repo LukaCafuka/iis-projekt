@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using IIS.Api.Auth;
 using IIS.Api.Data;
 using IIS.Api.Entities;
 using IIS.Api.Models;
@@ -23,6 +23,18 @@ public class AuthController : ControllerBase
         _users = users;
         _db = db;
         _jwt = jwt;
+    }
+
+    private void AppendRefreshCookie(string refreshToken)
+    {
+        var opts = AuthCookies.RefreshCookie(Request.IsHttps);
+        opts.Expires = _jwt.GetRefreshExpiry().UtcDateTime;
+        Response.Cookies.Append(AuthCookies.RefreshTokenName, refreshToken, opts);
+    }
+
+    private void DeleteRefreshCookie()
+    {
+        Response.Cookies.Delete(AuthCookies.RefreshTokenName, AuthCookies.RefreshCookie(Request.IsHttps));
     }
 
     [HttpPost("register")]
@@ -51,11 +63,25 @@ public class AuthController : ControllerBase
         return await IssueTokensAsync(user, ct).ConfigureAwait(false);
     }
 
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public IActionResult Logout()
+    {
+        DeleteRefreshCookie();
+        return Ok();
+    }
+
     [HttpPost("refresh")]
     [AllowAnonymous]
-    public async Task<ActionResult<TokenResponse>> Refresh([FromBody] RefreshRequest request, CancellationToken ct)
+    public async Task<ActionResult<TokenResponse>> Refresh([FromBody] RefreshRequest? request, CancellationToken ct)
     {
-        var hash = JwtTokenService.HashRefreshToken(request.RefreshToken);
+        var refreshRaw = Request.Cookies[AuthCookies.RefreshTokenName];
+        if (string.IsNullOrEmpty(refreshRaw))
+            refreshRaw = request?.RefreshToken;
+        if (string.IsNullOrEmpty(refreshRaw))
+            return Unauthorized();
+
+        var hash = JwtTokenService.HashRefreshToken(refreshRaw);
         var existing = await _db.RefreshTokens
             .Include(t => t.User)
             .FirstOrDefaultAsync(t => t.TokenHash == hash, ct)
@@ -82,6 +108,7 @@ public class AuthController : ControllerBase
             ExpiresAt = _jwt.GetRefreshExpiry()
         });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        AppendRefreshCookie(refresh);
         return new TokenResponse
         {
             AccessToken = access,

@@ -38,7 +38,7 @@
         var baseUrl = Configuration["Api:BaseUrl"] ?? "http://localhost:5136";
         try
         {
-            var client = HttpFactory.CreateClient("Api");
+            var client = HttpFactory.CreateClient("ApiNoAuth");
             var response = await client.PostAsJsonAsync("api/auth/login", _model);
             if (!response.IsSuccessStatusCode)
             {

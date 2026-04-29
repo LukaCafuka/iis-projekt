@@ -21,5 +21,6 @@ public class TokenResponse
 
 public class RefreshRequest
 {
-    public string RefreshToken { get; set; } = string.Empty;
+    /// <summary>Optional when refresh token is sent via HttpOnly cookie.</summary>
+    public string? RefreshToken { get; set; }
 }

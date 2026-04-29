@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace IIS.Client.Models;
 
@@ -16,11 +17,16 @@ public class RegisterRequest
 
 public class TokenResponse
 {
+    /// <summary>Must match API camelCase JSON so JWT values deserialize.</summary>
+    [JsonPropertyName("accessToken")]
     public string AccessToken { get; set; } = "";
+
+    [JsonPropertyName("refreshToken")]
     public string RefreshToken { get; set; } = "";
 }
 
+
 public class RefreshRequest
 {
-    [Required] public string RefreshToken { get; set; } = "";
+    public string? RefreshToken { get; set; }
 }
